@@ -1,8 +1,9 @@
 Rails.application.routes.draw do
   resources :agencies
+  resources :owners
   resources :buildings
   resources :events
-  
+  get '/agency-owners/:id', to: 'agencies#show_owner'
   devise_for :agencies,
              controllers: {
                  sessions: 'agencies/sessions',

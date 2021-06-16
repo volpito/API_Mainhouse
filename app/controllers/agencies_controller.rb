@@ -1,5 +1,6 @@
 class AgenciesController < ApplicationController
-  before_action :set_agency, only: [:show, :update, :destroy]
+  before_action :set_agency, only: [:show, :update, :show_owner, :destroy]
+  before_action :authenticate_agency!, except: [:index]
 
   # GET /agencies
   def index
@@ -10,7 +11,15 @@ class AgenciesController < ApplicationController
 
   # GET /agencies/1
   def show
-    render json: @agency, include: [:buildings]
+    if @agency.id == current_agency.id
+      render json: @agency, include: [:buildings]
+    end
+  end
+
+  def show_owner
+    if @agency.id == current_agency.id
+      render json: @agency, include: [:owners]
+    end
   end
 
   # POST /agencies
@@ -26,10 +35,12 @@ class AgenciesController < ApplicationController
 
   # PATCH/PUT /agencies/1
   def update
-    if @agency.update(agency_params)
-      render json: @agency
-    else
-      render json: @agency.errors, status: :unprocessable_entity
+    if @agency.id == current_agency.id
+      if @agency.update(agency_params)
+        render json: @agency
+      else
+        render json: @agency.errors, status: :unprocessable_entity
+      end
     end
   end
 

@@ -1,5 +1,6 @@
 class BuildingsController < ApplicationController
   before_action :set_building, only: [:show, :update, :destroy]
+  
 
   # GET /buildings
   def index
@@ -16,6 +17,7 @@ class BuildingsController < ApplicationController
   # POST /buildings
   def create
     @building = Building.new(building_params)
+    @building.agency_id = current_agency.id if current_agency
 
     if @building.save
       render json: @building, status: :created, location: @building
@@ -26,16 +28,31 @@ class BuildingsController < ApplicationController
 
   # PATCH/PUT /buildings/1
   def update
-    if @building.update(building_params)
-      render json: @building
-    else
-      render json: @building.errors, status: :unprocessable_entity
+    if @building.agency_id == current_agency.id
+      if @building.update(building_params)
+        render json: @building
+      else
+        render json: @building.errors, status: :unprocessable_entity
+      end
     end
   end
 
   # DELETE /buildings/1
   def destroy
-    @building.destroy
+    if @building.agency_id == current_agency.id
+      @building = Building.find_by(agency_id: current_agency, id: params[:id])
+      @owner = Owner.find_by(building_id: @building.id)
+      while @owner != nil
+        @owner.destroy
+        @owner = Owner.find_by(building_id: @building.id)
+      end
+      @event = Event.find_by(building_id: @building.id)
+      while @event != nil
+        @event.destroy
+        @event = Event.find_by(building_id: @building.id)
+      end
+      @building.destroy
+    end
   end
 
   private
